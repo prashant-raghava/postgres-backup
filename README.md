@@ -45,7 +45,7 @@ This shell script is designed to facilitate the backup of a PostgreSQL database.
    ./postgres_backup.sh
    ```
 
-   The script will read the configuration from the `backup_config.sh` file and initiate the backup process.
+   The script will read the configuration from the `postgres_backup.config` file and initiate the backup process.
 
 ## Scheduling Daily Backups
 
