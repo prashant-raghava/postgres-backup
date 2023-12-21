@@ -65,4 +65,4 @@ To schedule daily backups, you can use tools like `cron` on Unix-based systems. 
 
    This example runs the script every day at 2:00 AM. Adjust the timing according to your preferred schedule.
 
-Now, your PostgreSQL database will be backed up daily based on the configuration provided in the `backup_config.sh` file. Adjust the settings as needed to meet your specific backup requirements.
+Now, your PostgreSQL database will be backed up daily based on the configuration provided in the `postgres_backup.config` file. Adjust the settings as needed to meet your specific backup requirements.
