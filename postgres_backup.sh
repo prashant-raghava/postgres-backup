@@ -81,7 +81,7 @@ function perform_backups()
                     echo "Globals backup"
 
                     set -o pipefail
-                    if ! /usr/pgsql-10/bin/pg_dumpall -g -U "$USERNAME" | gzip > $FINAL_BACKUP_DIR"globals".sql.gz.in_progress; then
+                    if ! /usr/pgsql-13/bin/pg_dumpall -g -h "$HOSTNAME" -U "$USERNAME" | gzip > $FINAL_BACKUP_DIR"globals".sql.gz.in_progress; then
                             echo "[!!ERROR!!] Failed to produce globals backup" 1>&2
                     else
                             mv $FINAL_BACKUP_DIR"globals".sql.gz.in_progress $FINAL_BACKUP_DIR"globals".sql.gz
@@ -102,19 +102,19 @@ function perform_backups()
                 EXCLUDE_SCHEMA_ONLY_CLAUSE="$EXCLUDE_SCHEMA_ONLY_CLAUSE and datname !~ '$SCHEMA_ONLY_DB_LIST'"
         done
 
-        FULL_BACKUP_QUERY="select datname from pg_database where not datistemplate and datname !~ 'das' and datallowconn $EXCLUDE_SCHEMA_ONLY_CLAUSE order by datname;"
+        FULL_BACKUP_QUERY="select datname from pg_database where not datistemplate and datallowconn $EXCLUDE_SCHEMA_ONLY_CLAUSE order by datname;"
 
         echo -e "\n\nPerforming full backups"
         echo -e "--------------------------------------------\n"
 
-        for DATABASE in `/usr/pgsql-10/bin/psql -U "$USERNAME" -At -c "$FULL_BACKUP_QUERY" postgres`
+        for DATABASE in `/usr/pgsql-13/bin/psql -h "$HOSTNAME" -U "$USERNAME" -At -c "$FULL_BACKUP_QUERY" postgres`
         do
                 if [ $ENABLE_PLAIN_BACKUPS = "yes" ]
                 then
                         echo "Plain backup of $DATABASE"
 
                         set -o pipefail
-                        if ! /usr/pgsql-10/bin/pg_dump -Fp -U "$USERNAME" "$DATABASE" | gzip > $FINAL_BACKUP_DIR"$DATABASE".sql.gz.in_progress; then
+                        if ! /usr/pgsql-13/bin/pg_dump -Fp -h "$HOSTNAME" -U "$USERNAME" "$DATABASE" | gzip > $FINAL_BACKUP_DIR"$DATABASE".sql.gz.in_progress; then
                                 echo "[!!ERROR!!] Failed to produce plain backup database $DATABASE" 1>&2
                         else
                                 mv $FINAL_BACKUP_DIR"$DATABASE".sql.gz.in_progress $FINAL_BACKUP_DIR"$DATABASE".sql.gz
@@ -127,7 +127,7 @@ function perform_backups()
                 then
                         echo "Custom backup of $DATABASE"
 
-                        if ! /usr/pgsql-10/bin/pg_dump -Fc -U "$USERNAME" "$DATABASE" -f $FINAL_BACKUP_DIR"$DATABASE".custom.in_progress; then
+                        if ! /usr/pgsql-13/bin/pg_dump -Fc -h "$HOSTNAME" -U "$USERNAME" "$DATABASE" -f $FINAL_BACKUP_DIR"$DATABASE".custom.in_progress; then
                                 echo "[!!ERROR!!] Failed to produce custom backup database $DATABASE"
                         else
                                 mv $FINAL_BACKUP_DIR"$DATABASE".custom.in_progress $FINAL_BACKUP_DIR"$DATABASE".custom
@@ -176,12 +176,13 @@ find $BACKUP_DIR -maxdepth 1 -mtime +$DAYS_TO_KEEP -name "*-daily" -exec rm -rf 
 perform_backups "-daily"
 
 date_var=$(date +%Y%m%d)
-ToAddress="user@devopsbaba.com"
-LogFile="/postgres/pgsql/10/backups/LOGS/`date +\%Y-\%m-\%d`-daily.log"
+ToAddress="SUPPORT@devopsbaba.com"
+LogFile="/postgres_backup/LOGS/`date +\%Y-\%m-\%d`-daily.log"
+
 
 
 Email() {
-cat ${LogFile} | mail -s "PostGresBackup-Daily-ADC DEV-CDP (CDP-Backend-DB's, Postgres) on ${date_var} GTC" ${ToAddress}
+cat ${LogFile} | mail -s "PostGresBackup-Daily(ADMIN, Postgres) on ${date_var} GTC" ${ToAddress}
 
 }
 
